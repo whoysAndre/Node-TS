@@ -1,62 +1,79 @@
-import { Request, Response } from "express"
+import { Request, Response } from 'express';
 
 const todos = [
-  { id: "1", decription: 'Recolectar la gema del alma', createdAt: new Date() },
-  { id: "2", decription: 'Recolectar la gema del infinito', createdAt: null },
-  { id: "3", decription: 'Recolectar la gema del vacío', createdAt: new Date() }
+  { id: 1, text: 'Buy milk', completedAt: new Date() },
+  { id: 2, text: 'Buy bread', completedAt: null },
+  { id: 3, text: 'Buy butter', completedAt: new Date() },
 ];
 
 
+export class TodosController {
 
-export class TodoController {
-
-  // * Inyección de dependencias
-  constructor() { };
+  //* DI
+  constructor() { }
 
 
-  public getTodos = (req: Request, res: Response) => {
-    res.json(todos);
+  public getTodos = ( req: Request, res: Response ) => {
+    return res.json( todos );
   };
 
-  public getTodoById = (req: Request, res: Response) => {
-    //Read params
-    const { id } = req.params;
+  public getTodoById = ( req: Request, res: Response ) => {
+    const id = +req.params.id;
+    if ( isNaN( id ) ) return res.status( 400 ).json( { error: 'ID argument is not a number' } );
 
-    const todoById = todos.find(todo => todo.id === id);
+    const todo = todos.find( todo => todo.id === id );
 
-    if (!todoById) return res.json({ "message": "todo not exist" }).status(400);
+    ( todo )
+      ? res.json( todo )
+      : res.status( 404 ).json( { error: `TODO with id ${ id } not found` } );
+  };
 
-    res.json(todoById);
+  public createTodo = ( req: Request, res: Response ) => {
+    const { text } = req.body;
+    if ( !text ) return res.status( 400 ).json( { error: 'Text property is required' } );
+    const newTodo = {
+      id: todos.length + 1,
+      text: text,
+      completedAt: null
+    };
+
+    todos.push( newTodo );
+
+    res.json( newTodo );
 
   };
 
+  public updateTodo = ( req: Request, res: Response ) => {
+    const id = +req.params.id;
+    if ( isNaN( id ) ) return res.status( 400 ).json( { error: 'ID argument is not a number' } );
+    
+    const todo = todos.find( todo => todo.id === id );
+    if ( !todo ) return res.status( 404 ).json( { error: `Todo with id ${ id } not found` } );
 
-  public addTodo = (req: Request, res: Response) => {
-
-    const data = req.body;
-
-    todos.push(data);
-
-    res.json(todos);
-
-  };
-
-  public deleteTodo = (req: Request, res: Response) => {
-    //Read params
-    const { id } = req.params;
-
-    const todoById = todos.find(todo => todo.id === id);
-
-    if (!todoById) return res.json({ "message": "todo not exist" }).status(400);
-
-    const todoDelete = todos.filter(todo=>todo.id!==id);
-
-    res.json(todoDelete);
+    const { text, completedAt } = req.body;
+    
+    todo.text = text || todo.text;
+    ( completedAt === 'null' )
+      ? todo.completedAt = null
+      : todo.completedAt = new Date( completedAt || todo.completedAt );
     
 
-  };
+    res.json( todo );
+
+  }
 
 
+  public deleteTodo = (req:Request, res: Response) => {
+    const id = +req.params.id;
+
+    const todo = todos.find(todo => todo.id === id );
+    if ( !todo ) return res.status(404).json({ error: `Todo with id ${ id } not found` });
+
+    todos.splice( todos.indexOf(todo), 1 );
+    res.json( todo );
+
+  }
+  
 
 
-};
+}

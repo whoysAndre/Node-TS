@@ -1,9 +1,12 @@
 import mongoose from 'mongoose';
 
+
+
 interface Options {
   mongoUrl: string;
   dbName: string;
-};
+}
+
 
 export class MongoDatabase {
 
@@ -14,14 +17,20 @@ export class MongoDatabase {
       await mongoose.connect( mongoUrl, {
         dbName: dbName,
       });
+
       return true;
 
     } catch (error) {
+      console.log('Mongo connection error');
       throw error;
     }
 
-  };
+  }
 
-};
+
+}
+
+
+
 
 

@@ -1,40 +1,46 @@
-import express, { Router } from "express";
+import express, { Router } from 'express';
+import path from 'path';
 
-
-interface Options{
+interface Options {
+  port: number;
   routes: Router;
+  public_path?: string;
 }
 
 
+export class Server {
 
-//Create server
-export class Server{
-
-  // ? Atributes
   private app = express();
-  private readonly routes:Router;
+  private readonly port: number;
+  private readonly publicPath: string;
+  private readonly routes: Router;
 
-
-  constructor({routes}:Options){
+  constructor(options: Options) {
+    const { port, routes, public_path = 'public' } = options;
+    this.port = port;
+    this.publicPath = public_path;
     this.routes = routes;
   }
 
-  public start(){
+  
+  
+  async start() {
+    
 
-    //Middlewares
+    //* Middlewares
+    this.app.use( express.json() ); // raw
+    this.app.use( express.urlencoded({ extended: true }) ); // x-www-form-urlencoded
 
-    // * Read JSON  
-    this.app.use(express.json());
-    // * Read FORM
-    this.app.use(express.urlencoded({extended:true}));
-
-    //Routes
-    this.app.use(this.routes);
-
-    //Server
-    this.app.listen(3000);
+    //* Public Folder
+    this.app.use( express.static( this.publicPath ) );
 
 
-  };
+    //* Routes
+    this.app.use( this.routes );
+    
 
-};
+    this.app.listen(this.port);
+
+  }
+
+}
